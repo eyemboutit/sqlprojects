@@ -1,7 +1,7 @@
-- 👋 Hi, I’m @eyemboutit
-- 👀 I’m interested in ... networking, Data Analytics, Business Analytics
+- 👋 Hi, I’m Jonathan
+- 👀 I’m interested in ... Networking, Data Analytics, Database management systems, ERD's, Business Intelligence tools, Tableau
 - 🌱 I’m currently learning ...  SQL, R, Tableau
-- 💞️ I’m looking to collaborate on ... cleaning, exploring large datasets
+- 💞️ I’m looking to collaborate on ... Creating, updating, managing database systems for business intelligence insights
 - 📫 How to reach me ... @eyemboutit
 
 <!---
