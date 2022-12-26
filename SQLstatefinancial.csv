@@ -1,0 +1,39 @@
+select 
+	state, year, population, (total_expenses/population) as expense_ratio, 
+	(total_liabilities/population) as liability_ratio,
+	cash_ratio, (total_taxes/population) as tax_ratio, (personal_income/population) as income_ratio, 
+	(primary_govt_debt/total_assets) as debt_asset_ratio
+	from state_financial
+	where budgetrank <=10
+	order by population desc, expense_ratio desc
+	
+select 
+	state, year, population, (total_expenses/population) as expense_ratio, 
+	(total_liabilities/population) as liability_ratio,
+	cash_ratio, (total_taxes/population) as tax_ratio, (personal_income/population) as income_ratio, 
+	(primary_govt_debt/total_assets) as debt_asset_ratio
+	from state_financial
+	where budgetrank >=40
+	order by population desc, expense_ratio desc
+
+select 
+	state, year, population, (total_expenses/population) as expense_ratio, 
+	(total_liabilities/population) as liability_ratio,
+	cash_ratio, (total_taxes/population) as tax_ratio, (personal_income/population) as income_ratio, 
+	(primary_govt_debt/total_assets) as debt_asset_ratio
+	from state_financial
+	where budgetrank >=40
+	group by state, year, population, expense_ratio, liability_ratio, cash_ratio, tax_ratio, 
+	income_ratio, debt_asset_ratio
+	order by year, population desc
+	
+select 
+	state, year, population, (total_expenses/population) as expense_ratio, 
+	(total_liabilities/population) as liability_ratio,
+	cash_ratio, (total_taxes/population) as tax_ratio, (personal_income/population) as income_ratio, 
+	(primary_govt_debt/total_assets) as debt_asset_ratio
+	from state_financial
+	where budgetrank <=10
+	group by state, year, population, expense_ratio, liability_ratio, cash_ratio, tax_ratio, 
+	income_ratio, debt_asset_ratio
+	order by year, population desc
