@@ -1,0 +1,210 @@
+/*Beginning of data cleaning, including deleting columns and values that can skew data*/
+	
+delete from covidcases
+	where country = 'Africa'
+	
+select * from covidvaxes
+	where people_vaccinated > 1
+	order by date;
+	
+delete from covidvaxes 
+	where country = 'Europe' 
+	
+delete from covidvaxes 
+	where country = 'North America' 
+
+delete from covidvaxes 
+	where country = 'Upper middle income' 
+	
+delete from covidvaxes 
+	where country = 'South America' 
+	
+delete from covidvaxes 
+	where country = 'Asia' 
+	
+select * from covidvaxes
+	where continent is null
+	order by date;
+	
+delete from covidvaxes 
+	where country = 'Lower middle income' 
+	
+delete from covidvaxes 
+	where country = 'International' 
+	
+delete from covidvaxes 
+	where country = 'Oceania' 
+	
+delete from covidvaxes 
+	where country = 'Low income' 
+	
+delete from covidvaxes 
+	where country = 'Africa' 
+	
+delete from covidcases
+	where continent = 'Australia'
+	
+select distinct(country)
+	from covidcases
+	where continent = 'Oceania'
+	
+select * from covidcases
+	where continent is null
+	order by date;
+		
+alter table covidcases
+	alter column total_cases type numeric,
+	alter column new_cases type numeric,
+	alter column total_deaths type numeric,
+	alter column new_deaths type numeric,
+	alter column total_tests type numeric,
+	alter column new_tests type numeric,
+	alter column gdp_per_capita type numeric,
+	alter column population type numeric
+	
+alter table covidvaxes
+	alter column total_vaccinations type numeric,
+	alter column people_vaccinated type numeric,
+	alter column people_fully_vaccinated type numeric,
+	alter column total_boosters type numeric,
+	alter column new_vaccinations type numeric,
+	alter column population_density type numeric,
+	alter column population type numeric
+	
+/*Beginning of data manipulation*/
+	
+/* How many cases of covid exist per country, and the rate of deaths of those covid cases*/
+select continent, country, date, total_cases, total_deaths, cast(total_deaths/total_cases as float) as deaths_per_case
+	from covidcases
+	where total_cases > 1 and total_deaths is not null
+	order by date
+	
+/* demonstrates the percent likelihood of cases that result in deaths*/
+select continent, country, date, total_cases, total_deaths, round((total_deaths/total_cases), 2)*100 as death_perc
+	from covidcases
+	where total_deaths >=1
+	order by date
+	
+
+/*demonstrates the percent likelihood of cases that result in deaths in the US*/
+select continent, country, date, total_cases, total_deaths, total_tests, round((total_deaths/total_cases), 2)*100 as death_perc
+	from covidcases
+	where country like '%United States%' and total_deaths >=1
+	order by date desc;
+	
+/*examine the total cases of a country relative to its population*/
+select continent, country, date, total_cases, total_deaths, population, round((total_cases/population), 2) as cases_per_population
+	from covidcases
+	where total_cases >= 1
+	order by date
+
+/*examine the total cases of the US relative to the population*/
+select continent, country, date, total_cases, total_deaths, population, round((total_cases/population), 2) as cases_per_population
+	from covidcases
+	where country = 'United States' and total_cases >= 1
+	order by date 
+	
+/*examine countries with the highest infetion rate compared to population*/
+select country, population, total_cases, round(max((total_cases/population)), 2)*100 as perc_population_infected
+	from covidcases
+	where total_cases is not null
+	group by country, population, total_cases
+	order by perc_population_infected desc
+	
+/*examine countries with the highest death count per population*/
+select country, max(total_deaths) as total_death_count
+	from covidcases
+	where total_deaths is not null
+	group by country
+	order by total_death_count desc
+	
+/*examine the continents with the highest death count*/
+select continent, max(total_deaths) as total_deaths
+	from covidcases
+	where total_deaths is not null
+	group by continent
+	order by total_deaths desc
+	
+/* examine global figures for total cases, total tests, and total deaths by date*/
+select distinct(date), sum(total_cases) as total_cases, sum(total_tests) as total_tests, sum(total_deaths) as total_deaths
+	from covidcases
+	group by date
+	order by date
+/* Jan 22 2020 sees the first covid deaths reported*/ 
+
+
+/*examine the percentage of deaths per new covid case, globally by date*/
+select date, sum(new_cases) as agg_cases, sum(new_deaths) as agg_deaths, sum(new_deaths)/nullif(sum(new_cases),0) as death_perc
+		from covidcases
+		where new_deaths is not null
+		group by date
+		order by date
+
+/*examine the overall global percentage of deaths per new covid case*/
+select sum(new_cases) as agg_cases, sum(new_deaths) as agg_deaths, sum(new_deaths)/nullif(sum(new_cases),0) as death_perc
+		from covidcases
+		where new_deaths is not null
+		
+/*examine the total populations vs total vaccinations per country by joining covidcases and covidvaxes tables*/
+select 
+	distinct(covidcases.date), covidcases.continent, covidcases.country, covidcases.population, covidvaxes.total_vaccinations, covidvaxes.total_boosters
+		from covidcases 
+		join covidvaxes 
+		on covidcases.date = covidvaxes.date
+		where total_vaccinations >1 
+		order by covidcases.date
+
+/*examine the amount of cases reported, and deaths in a country vs the amount of NEW vaccinations in that same country*/ 		
+select 
+	distinct(covidcases.date), covidcases.continent, covidcases.country, covidcases.population, 
+	covidcases.total_cases, covidcases.total_deaths, covidvaxes.new_vaccinations, covidvaxes.total_boosters
+		from covidcases 
+		join covidvaxes 
+		on covidcases.date = covidvaxes.date
+		where total_vaccinations >1 
+		order by covidcases.date	
+		
+/*create a running total of vaccinations per country, by date*/
+select 
+	 covidcases.date, covidcases.continent, covidcases.country, covidcases.population, 
+	 covidvaxes.new_vaccinations, sum(covidvaxes.new_vaccinations) over (partition by covidcases.country order by
+																		covidcases.country, covidcases.date) as cont_vax_count
+		from covidcases 
+		join covidvaxes 
+		on covidcases.date = covidvaxes.date
+		where total_vaccinations >1 
+		order by covidcases.country, covidcases.date
+		
+
+/*use a CTE to create a running percentage of the total of the number of new vaccinations and the continuous count
+of all vaccinations in each country*/
+with population_vs_vaxes (date, continent, country, population, 
+	 new_vaccinations, cont_vax_count)
+	 as(
+select 
+	 covidcases.date, covidcases.continent, covidcases.country, covidcases.population, 
+	 covidvaxes.new_vaccinations, sum(covidvaxes.new_vaccinations) over (partition by covidcases.country order by
+																		covidcases.country, covidcases.date) as cont_vax_count
+		from covidcases 
+		join covidvaxes 
+		on covidcases.date = covidvaxes.date
+		where total_vaccinations >1 
+		/*order by covidcases.country, covidcases.date*/
+		 )
+		 select *, (cont_vax_count/population)*100 as cont_vax_percentage
+		 from population_vs_vaxes
+		
+/*create view to store data for visualizations*/
+create view cont_count_people_vaccinated as
+	select 
+	 covidcases.date, covidcases.continent, covidcases.country, covidcases.population, 
+	 covidvaxes.new_vaccinations, sum(covidvaxes.new_vaccinations) over (partition by covidcases.country order by
+																		covidcases.country, covidcases.date) as cont_vax_count
+		from covidcases 
+		join covidvaxes 
+		on covidcases.date = covidvaxes.date
+		where total_vaccinations >1 
+		/*order by covidcases.country, covidcases.date*/
+
+/*examine new view created to be used in data visualization tool*/		
+select * from cont_count_people_vaccinated
